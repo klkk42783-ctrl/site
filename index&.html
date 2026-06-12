@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Little Question 🌸</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&display=swap');
+
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root {
+      --blush:#FFF0F3;
+      --rose-light:#FFD6E2;
+      --rose:#F4A0BB;
+      --rose-deep:#E0678C;
+      --plum:#6B3A5E;
+      --plum-light:#9B6B8E;
+      --card-bg:rgba(255,240,243,0.72);
+      --shadow:0 8px 40px rgba(180,80,120,0.13);
+      --radius:20px
+    }
+
+    html,body{
+      height:100%;
+      font-family:'Lato',sans-serif;
+      background:var(--blush);
+      color:var(--plum);
+      overflow:hidden
+    }
+
+    #petal-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+    .screen{
+      position:fixed;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      z-index:1;opacity:0;pointer-events:none;
+      transition:opacity 0.8s cubic-bezier(.4,0,.2,1)
+    }
+    .screen.active{opacity:1;pointer-events:all}
+
+    .card{
+      background:var(--card-bg);
+      backdrop-filter:blur(18px) saturate(1.4);
+      -webkit-backdrop-filter:blur(18px) saturate(1.4);
+      border:1px solid rgba(255,190,210,0.5);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:clamp(2.5rem,6vw,4.5rem) clamp(2rem,7vw,5rem);
+      text-align:center;
+      max-width:540px;
+      width:90vw
+    }
+
+    .eyebrow{
+      font-weight:300;font-size:0.8rem;
+      letter-spacing:0.22em;text-transform:uppercase;
+      color:var(--rose-deep);margin-bottom:1.4rem;opacity:0.85
+    }
+
+    .headline{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(1.8rem,5vw,2.8rem);font-weight:400;
+      line-height:1.28;color:var(--plum);margin-bottom:0.6rem
+    }
+
+    .subline{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:clamp(0.95rem,2.2vw,1.12rem);color:var(--plum-light);
+      margin-bottom:2.6rem;line-height:1.6
+    }
+
+    .btn-group{
+      display:flex;gap:1rem;
+      justify-content:center;flex-wrap:wrap;
+      position:relative;min-height:48px
+    }
+
+    .btn{
+      font-family:'Lato',sans-serif;font-weight:400;
+      font-size:1rem;letter-spacing:0.04em;
+      border:none;border-radius:50px;
+      padding:0.8rem 2.2rem;cursor:pointer;outline:none;
+      transition:transform 0.22s ease,box-shadow 0.22s ease
+    }
+
+    #btn-yes{
+      background:linear-gradient(135deg,#F4A0BB 0%,#E0678C 100%);
+      color:#fff;box-shadow:0 4px 22px rgba(224,103,140,0.38)
+    }
+    #btn-yes:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 8px 30px rgba(224,103,140,0.5)}
+    #btn-yes:active{transform:scale(0.97)}
+
+    #btn-no{
+      background:rgba(255,214,226,0.55);
+      color:var(--plum-light);
+      border:1px solid rgba(244,160,187,0.4);
+      cursor:default;user-select:none;
+      transform:translate(0px,0px);
+      transition:transform 0.35s cubic-bezier(.25,.46,.45,.94);
+      will-change:transform
+    }
+
+    #reaction{flex-direction:column;gap:1.4rem;text-align:center}
+    #reaction .dog-wrap{
+      width:clamp(180px,40vw,280px);aspect-ratio:1;
+      border-radius:50%;overflow:hidden;
+      border:4px solid rgba(244,160,187,0.6);
+      box-shadow:0 0 0 10px rgba(244,160,187,0.15),0 12px 40px rgba(180,80,120,0.2);
+      opacity:0;transform:scale(0.88);
+      transition:opacity 0.7s ease,transform 0.7s cubic-bezier(.34,1.56,.64,1)
+    }
+    #reaction.active .dog-wrap{opacity:1;transform:scale(1)}
+    #reaction .dog-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+    #reaction .reaction-text{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(1.3rem,3.5vw,1.9rem);color:var(--plum);
+      opacity:0;transform:translateY(10px);
+      transition:opacity 0.6s ease 0.35s,transform 0.6s ease 0.35s
+    }
+    #reaction.active .reaction-text{opacity:1;transform:translateY(0)}
+    #reaction .reaction-sub{
+      font-weight:300;font-size:0.95rem;color:var(--plum-light);
+      opacity:0;transition:opacity 0.6s ease 0.6s
+    }
+    #reaction.active .reaction-sub{opacity:1}
+
+    #datepick .card{max-width:440px}
+    #datepick .card .eyebrow{margin-bottom:0.8rem}
+    #datepick .card .headline{font-size:clamp(1.5rem,4vw,2rem);margin-bottom:0.5rem}
+    #datepick .card .subline{font-size:0.95rem;margin-bottom:2rem}
+
+    .date-field-wrap{position:relative;margin-bottom:1.6rem}
+    .date-field-wrap label{
+      display:block;font-size:0.75rem;
+      letter-spacing:0.16em;text-transform:uppercase;
+      color:var(--rose-deep);margin-bottom:0.55rem;font-weight:400
+    }
+    input[type="date"]{
+      width:100%;padding:0.85rem 1.2rem;
+      border-radius:12px;border:1.5px solid rgba(244,160,187,0.45);
+      background:rgba(255,255,255,0.65);
+      font-family:'Lato',sans-serif;font-size:1rem;color:var(--plum);
+      outline:none;-webkit-appearance:none;
+      transition:border-color 0.2s,box-shadow 0.2s
+    }
+    input[type="date"]:focus{border-color:var(--rose-deep);box-shadow:0 0 0 3px rgba(224,103,140,0.14)}
+    input[type="date"]::-webkit-calendar-picker-indicator{
+      opacity:0.5;cursor:pointer;
+      filter:invert(30%) sepia(40%) saturate(600%) hue-rotate(290deg)
+    }
+    #btn-confirm{
+      background:linear-gradient(135deg,#F4A0BB 0%,#E0678C 100%);
+      color:#fff;box-shadow:0 4px 22px rgba(224,103,140,0.35);
+      font-family:'Lato',sans-serif;font-size:1rem;
+      letter-spacing:0.05em;border:none;border-radius:50px;
+      padding:0.85rem 2.6rem;cursor:pointer;width:100%;
+      transition:transform 0.22s ease,box-shadow 0.22s ease
+    }
+    #btn-confirm:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(224,103,140,0.48)}
+
+    #confirmation{flex-direction:column;gap:1rem;text-align:center}
+    .confirm-card{
+      background:var(--card-bg);
+      backdrop-filter:blur(18px) saturate(1.4);
+      -webkit-backdrop-filter:blur(18px) saturate(1.4);
+      border:1px solid rgba(255,190,210,0.5);
+      border-radius:var(--radius);box-shadow:var(--shadow);
+      padding:clamp(2.5rem,6vw,4rem) clamp(2rem,6vw,4.5rem);
+      max-width:460px;width:90vw;text-align:center;
+      opacity:0;transform:scale(0.92) translateY(16px);
+      transition:opacity 0.7s ease,transform 0.7s cubic-bezier(.34,1.56,.64,1)
+    }
+    #confirmation.active .confirm-card{opacity:1;transform:scale(1) translateY(0)}
+    .confirm-icon{
+      font-size:3rem;margin-bottom:1.2rem;display:block;
+      animation:heartbeat 1.6s ease-in-out infinite
+    }
+    @keyframes heartbeat{
+      0%,100%{transform:scale(1)} 14%{transform:scale(1.18)}
+      28%{transform:scale(1)} 42%{transform:scale(1.1)} 56%{transform:scale(1)}
+    }
+    .confirm-headline{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(1.5rem,4vw,2rem);color:var(--plum);
+      margin-bottom:0.7rem;line-height:1.3
+    }
+    .confirm-detail{font-weight:300;font-size:0.95rem;color:var(--plum-light);line-height:1.7}
+    .confirm-date-display{
+      display:inline-block;margin-top:1rem;
+      padding:0.5rem 1.4rem;
+      background:rgba(244,160,187,0.2);border-radius:50px;
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:1rem;color:var(--rose-deep);
+      border:1px solid rgba(244,160,187,0.4)
+    }
+
+    #toofar{flex-direction:column}
+    .toofar-card{
+      background:var(--card-bg);
+      backdrop-filter:blur(18px) saturate(1.4);
+      -webkit-backdrop-filter:blur(18px) saturate(1.4);
+      border:1px solid rgba(255,190,210,0.5);
+      border-radius:var(--radius);box-shadow:var(--shadow);
+      padding:clamp(2.5rem,6vw,4rem) clamp(2rem,6vw,4.5rem);
+      max-width:460px;width:90vw;text-align:center;
+      opacity:0;transform:scale(0.92) translateY(16px);
+      transition:opacity 0.7s ease,transform 0.7s cubic-bezier(.34,1.56,.64,1)
+    }
+    #toofar.active .toofar-card{opacity:1;transform:scale(1) translateY(0)}
+    .toofar-icon{
+      font-size:3rem;margin-bottom:1.2rem;display:block;
+      animation:float 3s ease-in-out infinite
+    }
+    @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)}}
+    .toofar-headline{
+      font-family:'Playfair Display',serif;
+      font-size:clamp(1.3rem,3.5vw,1.8rem);color:var(--plum);
+      margin-bottom:1rem;line-height:1.35
+    }
+    .toofar-msg1{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:clamp(0.95rem,2vw,1.08rem);color:var(--plum-light);
+      margin-bottom:0.5rem;line-height:1.6;
+      opacity:0;transform:translateY(8px);
+      transition:opacity 0.7s ease 0.4s,transform 0.7s ease 0.4s
+    }
+    #toofar.active .toofar-msg1{opacity:1;transform:translateY(0)}
+    .toofar-msg2{
+      font-family:'Playfair Display',serif;font-style:italic;
+      font-size:clamp(0.95rem,2vw,1.08rem);color:var(--rose-deep);
+      margin-bottom:2rem;line-height:1.6;
+      opacity:0;transform:translateY(8px);
+      transition:opacity 0.7s ease 1.5s,transform 0.7s ease 1.5s
+    }
+    #toofar.active .toofar-msg2{opacity:1;transform:translateY(0)}
+    .toofar-btn{
+      background:linear-gradient(135deg,#F4A0BB 0%,#E0678C 100%);
+      color:#fff;box-shadow:0 4px 22px rgba(224,103,140,0.35);
+      opacity:0;transform:translateY(8px);
+      transition:opacity 0.6s ease 2.4s,transform 0.6s ease 2.4s,box-shadow 0.22s ease
+    }
+    #toofar.active .toofar-btn{opacity:1;transform:translateY(0)}
+    .toofar-btn:hover{transform:translateY(-2px) !important;box-shadow:0 8px 28px rgba(224,103,140,0.48)}
+
+    .bg-gradient{
+      position:fixed;inset:0;z-index:-1;
+      background:
+        radial-gradient(ellipse 70% 60% at 20% 10%,#FFD6E2 0%,transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 90%,#F4A0BB44 0%,transparent 55%),
+        radial-gradient(ellipse 80% 70% at 50% 50%,#FFF0F3 0%,#FDE4ED 100%)
+    }
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:0.01ms !important;transition-duration:0.3s !important}
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-gradient"></div>
+<canvas id="petal-canvas"></canvas>
+
+<section class="screen active" id="landing">
+  <div class="card">
+    <p class="eyebrow">A little something for you</p>
+    <h1 class="headline">Will you go out<br>with me?</h1>
+    <p class="subline">No pressure, no rush — just a sincere<br>question from someone who means it.</p>
+    <div class="btn-group" id="btn-group">
+      <button class="btn" id="btn-yes">Yes, I'd love to 💖</button>
+      <button class="btn" id="btn-no">Maybe not… 😢</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="reaction">
+  <div class="dog-wrap">
+    <img src="image1.png" alt="Surprised dog" />
+  </div>
+  <p class="reaction-text">You said yes! 🌸</p>
+  <p class="reaction-sub">Taking you somewhere special…</p>
+</section>
+
+<section class="screen" id="datepick">
+  <div class="card">
+    <p class="eyebrow">Let's make it official</p>
+    <h2 class="headline">Choose our date 💕</h2>
+    <p class="subline">Pick a day and I'll make it one<br>to remember.</p>
+    <div class="date-field-wrap">
+      <label for="date-input">Our first date</label>
+      <input type="date" id="date-input" />
+    </div>
+    <button class="btn" id="btn-confirm">Confirm our date ✨</button>
+  </div>
+</section>
+
+<section class="screen" id="confirmation">
+  <div class="confirm-card">
+    <span class="confirm-icon">💖</span>
+    <h2 class="confirm-headline">It's a date!</h2>
+    <p class="confirm-detail">I'm already counting down the moments.<br>This is going to be something beautiful.</p>
+    <div class="confirm-date-display" id="confirm-date-display"></div>
+  </div>
+</section>
+
+<section class="screen" id="toofar">
+  <div class="toofar-card">
+    <span class="toofar-icon">💌</span>
+    <h2 class="toofar-headline">Isn't this a bit too far away? 😢</h2>
+    <p class="toofar-msg1">I was hoping to see you sooner…</p>
+    <p class="toofar-msg2">But I'll wait for you 💕</p>
+    <button class="btn toofar-btn" id="btn-closer">Choose a closer date 💖</button>
+  </div>
+</section>
+
+<script>
+var canvas = document.getElementById('petal-canvas');
+var ctx = canvas.getContext('2d');
+var W, H, petals = [];
+var COLORS = ['#F4A0BB','#FFB6C8','#FFCDD8','#F9D0DC','#E8789A'];
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+addEventListener('resize', resize);
+resize();
+
+function makePetal(start) {
+  return {
+    x: Math.random() * W,
+    y: start ? Math.random() * H : -18,
+    r: 5 + Math.random() * 7,
+    rot: Math.random() * Math.PI * 2,
+    drot: (Math.random() - 0.5) * 0.018,
+    speed: 0.35 + Math.random() * 0.55,
+    drift: (Math.random() - 0.5) * 0.4,
+    alpha: 0.18 + Math.random() * 0.22,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)]
+  };
+}
+
+for (var i = 0; i < 28; i++) petals.push(makePetal(true));
+
+var lastTime = 0;
+function loop(ts) {
+  var dt = Math.min(ts - lastTime, 50);
+  lastTime = ts;
+  ctx.clearRect(0, 0, W, H);
+  for (var i = 0; i < petals.length; i++) {
+    var p = petals[i];
+    p.y += p.speed * (dt/16);
+    p.x += p.drift * (dt/16);
+    p.rot += p.drot * (dt/16);
+    if (p.y > H + 20) petals[i] = makePetal(false);
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, p.r, p.r * 1.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+function showScreen(id) {
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+  var next = document.getElementById(id);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      next.classList.add('active');
+    });
+  });
+}
+
+var btnNo = document.getElementById('btn-no');
+var btnYes = document.getElementById('btn-yes');
+var card = document.querySelector('#landing .card');
+
+var tx = 0, ty = 0;
+var targetX = 0, targetY = 0;
+var rafId = null;
+
+var TRIGGER_DIST = 160;
+var PUSH_FORCE = 1.4;
+
+function updateTransform() {
+  tx += (targetX - tx) * 0.28;
+  ty += (targetY - ty) * 0.28;
+
+  var cardRect = card.getBoundingClientRect();
+  var noRect = btnNo.getBoundingClientRect();
+
+  var maxLeft = cardRect.left - (noRect.left - tx);
+  var maxRight = cardRect.right - (noRect.right - tx);
+  var maxTop = cardRect.top - (noRect.top - ty);
+  var maxBot = cardRect.bottom - (noRect.bottom - ty);
+
+  tx = Math.max(maxLeft + 8, Math.min(maxRight - 8, tx));
+  ty = Math.max(maxTop + 8, Math.min(maxBot - 8, ty));
+
+  btnNo.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
+
+  if (Math.abs(targetX - tx) > 0.5 || Math.abs(targetY - ty) > 0.5) {
+    rafId = requestAnimationFrame(updateTransform);
+  } else {
+    rafId = null;
+  }
+}
+
+function onMouseMove(e) {
+  var r = btnNo.getBoundingClientRect();
+  var bCx = r.left + r.width / 2;
+  var bCy = r.top + r.height / 2;
+  var dist = Math.hypot(e.clientX - bCx, e.clientY - bCy);
+
+  if (dist > TRIGGER_DIST) {
+    targetX = 0;
+    targetY = 0;
+  } else {
+    var strength = (1 - dist / TRIGGER_DIST) * PUSH_FORCE;
+    var dx = (bCx - e.clientX) / (dist || 1);
+    var dy = (bCy - e.clientY) / (dist || 1);
+    var maxPush = 120;
+    targetX = Math.max(-maxPush, Math.min(maxPush, dx * maxPush * strength));
+    targetY = Math.max(-maxPush, Math.min(maxPush, dy * maxPush * strength));
+  }
+
+  if (!rafId) rafId = requestAnimationFrame(updateTransform);
+}
+
+document.addEventListener('mousemove', onMouseMove);
+document.addEventListener('touchmove', function(e) {
+  onMouseMove({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+}, { passive: true });
+
+document.getElementById('btn-yes').addEventListener('click', function() {
+  btnNo.style.display = 'none';
+  showScreen('reaction');
+  setTimeout(function() { showScreen('datepick'); }, 5500);
+});
+
+document.getElementById('btn-confirm').addEventListener('click', function() {
+  var raw = document.getElementById('date-input').value;
+  if (!raw) return;
+
+  var selected = new Date(raw + 'T12:00:00');
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  var diffDays = Math.round((selected - today) / (1000 * 60 * 60 * 24));
+
+  if (diffDays >= 10) {
+    showScreen('toofar');
+  } else {
+    var label = selected.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('confirm-date-display').textContent = label;
+    showScreen('confirmation');
+  }
+});
+
+document.getElementById('btn-closer').addEventListener('click', function() {
+  document.getElementById('date-input').value = '';
+  showScreen('datepick');
+});
+
+document.getElementById('date-input').min = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
